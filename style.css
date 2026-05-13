@@ -1,0 +1,461 @@
+/* ===== Reset ===== */
+*, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+/* ===== Base ===== */
+body {
+    font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+    background: #f1f5f9;
+    color: #1e293b;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===== Header ===== */
+header {
+    background: #1e293b;
+    color: #f8fafc;
+    padding: 0.875rem 1.75rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+header h1 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    letter-spacing: 0.015em;
+}
+
+/* ===== Zoom Controls ===== */
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.zoom-btn {
+    width: 28px;
+    height: 28px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.zoom-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    border-color: rgba(255, 255, 255, 0.45);
+}
+
+.zoom-level {
+    font-size: 0.8rem;
+    font-weight: 600;
+    min-width: 42px;
+    text-align: center;
+    color: #f8fafc;
+}
+
+/* ===== Root Layout ===== */
+.layout {
+    display: flex;
+    flex: 1;
+    min-height: 0;
+}
+
+/* ===== Sidebar ===== */
+.sidebar {
+    width: 275px;
+    min-width: 240px;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
+    padding: 1.25rem 1.125rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    overflow-y: auto;
+    flex-shrink: 0;
+}
+
+.sidebar-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+/* ===== Form Groups ===== */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-group label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #475569;
+    display: flex;
+    align-items: baseline;
+    gap: 0.3rem;
+}
+
+.math { font-style: italic; }
+
+.tag {
+    font-size: 0.68rem;
+    font-weight: 400;
+    color: #94a3b8;
+}
+
+/* ===== Range + Number Row ===== */
+.range-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+input[type="range"] {
+    flex: 1;
+    accent-color: #3b82f6;
+    cursor: pointer;
+    height: 4px;
+}
+
+/* ===== Number Inputs ===== */
+input[type="number"] {
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.875rem;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    opacity: 0.6;
+}
+
+input[type="number"]:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.num-small { width: 70px; text-align: center; }
+.num-full  { width: 100%; }
+
+/* ===== Calculate Button ===== */
+#calculate-btn {
+    padding: 0.8rem 1.25rem;
+    background: #1e293b;
+    color: #f8fafc;
+    border: none;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    transition: background 0.18s, box-shadow 0.18s, transform 0.1s;
+    box-shadow: 0 2px 8px rgba(30, 41, 59, 0.35);
+    width: 100%;
+}
+
+#calculate-btn:hover {
+    background: #0f172a;
+    box-shadow: 0 4px 14px rgba(30, 41, 59, 0.5);
+}
+
+#calculate-btn:active {
+    transform: scale(0.98);
+}
+
+/* ===== Status Line ===== */
+.status {
+    font-size: 0.73rem;
+    color: #64748b;
+    min-height: 1em;
+    text-align: center;
+    line-height: 1.4;
+}
+
+/* ===== Info Box ===== */
+.info-box {
+    margin-top: auto;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    font-size: 0.76rem;
+    color: #475569;
+    line-height: 1.7;
+}
+
+.info-title {
+    display: block;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 0.3rem;
+}
+
+.info-box ul {
+    padding-left: 1rem;
+}
+
+/* ===== Audience Bets ===== */
+.bets-section {
+    gap: 0.55rem;
+}
+
+.bets-section .sidebar-title {
+    margin-bottom: 0;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.4rem;
+}
+
+.bets-section .sidebar-title .tag {
+    font-weight: 400;
+    font-size: 0.64rem;
+    color: #94a3b8;
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+#bets-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.bet-row {
+    display: flex;
+    gap: 0.4rem;
+    align-items: center;
+}
+
+.bet-name {
+    flex: 1;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.42rem 0.55rem;
+    font-size: 0.82rem;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    min-width: 0;
+}
+
+.bet-name:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.bet-name::placeholder {
+    color: #94a3b8;
+    font-size: 0.76rem;
+}
+
+.bet-guess {
+    width: 62px;
+    flex-shrink: 0;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    padding: 0.42rem 0.45rem;
+    font-size: 0.82rem;
+    color: #1e293b;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: center;
+    -moz-appearance: textfield;
+}
+
+.bet-guess::-webkit-inner-spin-button,
+.bet-guess::-webkit-outer-spin-button {
+    opacity: 0.6;
+}
+
+.bet-guess:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
+}
+
+.bet-guess::placeholder {
+    color: #94a3b8;
+    font-size: 0.72rem;
+}
+
+.bet-row .remove-bet-btn {
+    width: 26px;
+    height: 26px;
+    flex-shrink: 0;
+    background: transparent;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bet-row .remove-bet-btn:hover {
+    color: #e11d48;
+    border-color: #fecaca;
+    background: #fef2f2;
+}
+
+.add-bet-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.35rem;
+    background: transparent;
+    border: 1px dashed #cbd5e1;
+    border-radius: 6px;
+    color: #94a3b8;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+
+.add-bet-btn:hover {
+    color: #3b82f6;
+    border-color: #93c5fd;
+    background: #eff6ff;
+}
+
+/* ===== Main Content ===== */
+.main-content {
+    flex: 1;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    overflow-y: auto;
+    min-width: 0;
+}
+
+/* ===== Chart Cards ===== */
+.chart-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 1.125rem 1.5rem 1.375rem;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07), 0 4px 14px rgba(0, 0, 0, 0.04);
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 260px;
+}
+
+.chart-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: #64748b;
+    margin-bottom: 0.875rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #f1f5f9;
+    flex-shrink: 0;
+}
+
+/* ===== Chart Wrapper ===== */
+.chart-wrap {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+}
+
+.chart-wrap canvas {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* ===== Scrollbar styling (WebKit) ===== */
+.sidebar::-webkit-scrollbar,
+.main-content::-webkit-scrollbar {
+    width: 5px;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.main-content::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* ===== Results Summary ===== */
+.results-summary {
+    flex: 0 0 auto;
+    min-height: unset;
+}
+
+#results-content {
+    font-size: 0.9rem;
+    line-height: 1.8;
+}
+
+.optimal-stake {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #e11d48;
+    background: #fff1f2;
+    border: 2px solid #fecdd3;
+    border-radius: 8px;
+    padding: 0.6rem 1rem;
+    margin-bottom: 0.75rem;
+    text-align: center;
+}
+
+.bets-results {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.bet-result {
+    padding: 0.4rem 0.65rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.bet-result.correct {
+    background: #ecfdf5;
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+}
+
+.bet-result.incorrect {
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+}

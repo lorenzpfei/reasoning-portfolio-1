@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task E4.2: Gambler's Problem - Value Iteration</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+    <header>
+        <h1>Task E4.2: Gambler's Problem &mdash; Value Iteration</h1>
+        <div class="zoom-controls">
+            <button id="zoom-out" class="zoom-btn" title="Zoom out">−</button>
+            <span id="zoom-level" class="zoom-level">100%</span>
+            <button id="zoom-in" class="zoom-btn" title="Zoom in">+</button>
+        </div>
+    </header>
+
+    <div class="layout">
+
+        <!-- ===== Sidebar / Control Panel ===== -->
+        <aside class="sidebar">
+            <p class="sidebar-title">Parameters</p>
+
+            <div class="form-group">
+                <label for="ph-slider">
+                    Probability of Heads &nbsp;<span class="math">p<sub>h</sub></span>
+                </label>
+                <div class="range-row">
+                    <input type="range" id="ph-slider" min="0" max="1" step="0.01" value="0.4">
+                    <input type="number" id="ph-input" min="0" max="1" step="0.01" value="0.40" class="num-small">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="target-reward">Target Reward &nbsp;<span class="tag">(goal)</span></label>
+                <input type="number" id="target-reward" value="1.0" step="0.1" class="num-full">
+            </div>
+
+            <div class="form-group">
+                <label for="step-reward">Step Reward &nbsp;<span class="tag">(other)</span></label>
+                <input type="number" id="step-reward" value="0.0" step="0.1" class="num-full">
+            </div>
+
+            <div class="form-group">
+                <label for="start-capital">Starting Capital <em>s</em><sub>0</sub></label>
+                <input type="number" id="start-capital" value="50" min="1" max="99" step="1" class="num-full">
+            </div>
+
+            <button id="calculate-btn">Reveal Optimal Strategy</button>
+
+            <p id="status" class="status"></p>
+
+            <div class="form-group bets-section">
+                <p class="sidebar-title">Audience Bets</p>
+                <div id="bets-container">
+                    <div class="bet-row"><input type="text" class="bet-name" placeholder="Name" value="Alice"><input type="number" class="bet-guess" placeholder="Stake" value="10" min="1" max="99" step="1"></div>
+                </div>
+                <button id="add-bet-btn" class="add-bet-btn" type="button">+</button>
+            </div>
+
+            <div class="info-box">
+                <span class="info-title">Fixed Settings</span>
+                <ul>
+                    <li>Goal: <em>s</em> = 100</li>
+                    <li>States: <em>s</em> = 1 &ndash; 99</li>
+                    <li>Actions: <em>a</em> = 1 &ndash; min(<em>s</em>, 100&minus;<em>s</em>)</li>
+                    <li>&gamma; = 1.0 &nbsp;|&nbsp; &theta; = 1e&minus;9</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- ===== Main Content: Charts ===== -->
+        <main class="main-content">
+
+            <div class="chart-card">
+                <h2 class="chart-title">Value Function <em>V(s)</em></h2>
+                <div class="chart-wrap">
+                    <canvas id="value-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h2 class="chart-title">Optimal Policy &pi;(<em>s</em>)</h2>
+                <div class="chart-wrap">
+                    <canvas id="policy-chart"></canvas>
+                </div>
+            </div>
+
+            <div id="results-summary" class="chart-card results-summary" style="display:none;">
+                <h2 class="chart-title">Results Summary</h2>
+                <div id="results-content"></div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
