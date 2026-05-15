@@ -11,6 +11,11 @@
 
     <header>
         <h1>Task E4.2: Gambler's Problem &mdash; Value Iteration</h1>
+        <nav class="mode-tabs">
+            <button class="mode-tab active" id="tab-presentation" data-mode="presentation">Guessing</button>
+            <button class="mode-tab" id="tab-micro" data-mode="micro">Micro-World ($3)</button>
+            <button class="mode-tab" id="tab-analysis" data-mode="analysis">Analysis</button>
+        </nav>
         <div class="zoom-controls">
             <button id="zoom-out" class="zoom-btn" title="Zoom out">−</button>
             <span id="zoom-level" class="zoom-level">100%</span>
@@ -53,10 +58,13 @@
 
             <p id="status" class="status"></p>
 
-            <div class="form-group bets-section">
+            <div id="audience-section" class="form-group bets-section">
                 <p class="sidebar-title">Audience Bets</p>
                 <div id="bets-container">
-                    <div class="bet-row"><input type="text" class="bet-name" placeholder="Name" value="Alice"><input type="number" class="bet-guess" placeholder="Stake" value="10" min="1" max="99" step="1"></div>
+                    <div class="bet-row">
+                        <input type="text" class="bet-name" placeholder="Name" value="Alice">
+                        <input type="number" class="bet-guess" placeholder="Stake" value="10" min="1" max="99" step="1">
+                    </div>
                 </div>
                 <button id="add-bet-btn" class="add-bet-btn" type="button">+</button>
             </div>
@@ -72,26 +80,254 @@
             </div>
         </aside>
 
-        <!-- ===== Main Content: Charts ===== -->
+        <!-- ===== Main Content ===== -->
         <main class="main-content">
 
-            <div class="chart-card">
-                <h2 class="chart-title">Value Function <em>V(s)</em></h2>
-                <div class="chart-wrap">
-                    <canvas id="value-chart"></canvas>
+            <!-- ===== Guessing View ===== -->
+            <div id="view-presentation" style="display:flex; flex-direction:column; gap:1.25rem; flex:1; min-height:0;">
+
+                <!-- Scenario Card: always visible -->
+                <div class="scenario-card chart-card">
+                    <span class="scenario-eyebrow">The Rigged Casino</span>
+                    <div class="scenario-stats">
+                        <div class="scenario-stat">
+                            <span class="scenario-stat-label">Starting Capital</span>
+                            <span class="scenario-stat-value" id="hero-capital">$50</span>
+                        </div>
+                        <div class="scenario-divider"></div>
+                        <div class="scenario-stat">
+                            <span class="scenario-stat-label">Goal</span>
+                            <span class="scenario-stat-value">$100</span>
+                        </div>
+                        <div class="scenario-divider"></div>
+                        <div class="scenario-stat">
+                            <span class="scenario-stat-label">Win Chance <em>p</em><sub>h</sub></span>
+                            <span class="scenario-stat-value scenario-ph" id="hero-ph">40%</span>
+                        </div>
+                    </div>
+                    <p class="scenario-question">What is the optimal first bet?</p>
                 </div>
+
+                <!-- Results summary: shown after reveal -->
+                <div id="results-summary" class="chart-card results-summary" style="display:none;">
+                    <h2 class="chart-title">Results</h2>
+                    <div id="results-content"></div>
+                </div>
+
+                <!-- Policy chart: shown after reveal -->
+                <div id="policy-card" class="chart-card policy-reveal-card" style="display:none;">
+                    <h2 class="chart-title">Optimal Policy &pi;(<em>s</em>)</h2>
+                    <div class="chart-wrap">
+                        <canvas id="policy-chart"></canvas>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="chart-card">
-                <h2 class="chart-title">Optimal Policy &pi;(<em>s</em>)</h2>
-                <div class="chart-wrap">
-                    <canvas id="policy-chart"></canvas>
+            <!-- ===== Micro-World View ===== -->
+            <div id="view-micro" style="display:none; flex-direction:column; gap:0.875rem; flex:1; min-height:0;">
+
+                <!-- Step 1 -->
+                <div class="chart-card mw-card">
+                    <div class="mw-step-header">
+                        <div class="mw-step-badge"><span class="mw-step-num">1</span>Setup MDP</div>
+                        <span class="mw-step-sub">Goal = $3 &nbsp;&middot;&nbsp; p<sub>h</sub> = 0.4 &nbsp;&middot;&nbsp; &gamma; = 1.0</span>
+                    </div>
+                    <div class="mw-grid-4">
+                        <div class="mw-state mw-lose"><div class="mw-state-val">$0</div><div class="mw-state-lbl">Lose (fixed)</div></div>
+                        <div class="mw-state mw-nt"><div class="mw-state-val">$1</div><div class="mw-state-lbl">Non-terminal</div></div>
+                        <div class="mw-state mw-nt"><div class="mw-state-val">$2</div><div class="mw-state-lbl">Non-terminal</div></div>
+                        <div class="mw-state mw-win"><div class="mw-state-val">$3</div><div class="mw-state-lbl">WIN (fixed)</div></div>
+                    </div>
+                    <div class="mw-banner mw-banner-amber" style="margin-top:0.75rem;">
+                        Reward: 0 every flip &nbsp;+&nbsp; 1 only at $3 &nbsp;&nbsp;|&nbsp;&nbsp; Terminal: $0 = lose &nbsp;&nbsp;&nbsp; $3 = win
+                    </div>
                 </div>
+
+                <div class="mw-step-arrow">&darr;</div>
+
+                <!-- Step 2 -->
+                <div class="chart-card mw-card">
+                    <div class="mw-step-header">
+                        <div class="mw-step-badge"><span class="mw-step-num">2</span>Boundary Rule</div>
+                        <span class="mw-step-sub">Max allowed bet at each state = min(s, 3 &minus; s)</span>
+                    </div>
+                    <div class="mw-grid-2">
+                        <div class="mw-banner mw-banner-blue">$1 &nbsp;: &nbsp;min(1, 2) = 1 &nbsp;&rarr;&nbsp; bet $1 only</div>
+                        <div class="mw-banner mw-banner-blue">$2 &nbsp;: &nbsp;min(2, 1) = 1 &nbsp;&rarr;&nbsp; bet $1 only</div>
+                    </div>
+                </div>
+
+                <div class="mw-step-arrow">&darr;</div>
+
+                <!-- Step 3 -->
+                <div class="chart-card mw-card">
+                    <div class="mw-step-header">
+                        <div class="mw-step-badge"><span class="mw-step-num">3</span>Value Iteration</div>
+                        <span class="mw-step-sub">Bellman Optimality Equation applied every sweep</span>
+                    </div>
+
+                    <div class="mw-banner mw-banner-amber">
+                        V(s) = max<sub>bet</sub> [ p<sub>h</sub> &times; V(s + bet) + (1 &minus; p<sub>h</sub>) &times; V(s &minus; bet) ] &nbsp;=&nbsp; 0.4 &times; V(heads) + 0.6 &times; V(tails)
+                    </div>
+
+                    <div class="mw-sublabel">Initialize &mdash; all guesses = 0 &nbsp;(only $3 = 1 is fixed)</div>
+                    <div class="mw-grid-4">
+                        <div class="mw-val-box mw-val-fixed-0">$0 = 0</div>
+                        <div class="mw-val-box mw-val-init">$1 = 0</div>
+                        <div class="mw-val-box mw-val-init">$2 = 0</div>
+                        <div class="mw-val-box mw-val-fixed-win">$3 = 1</div>
+                    </div>
+
+                    <div class="mw-round-header">
+                        <span class="mw-round-badge">Sweep 1</span>
+                        <span class="mw-round-desc">Only V($3) = 1 is known &mdash; which state can reach $3 in one flip?</span>
+                    </div>
+                    <div class="mw-calc mw-calc-same">
+                        $1: &nbsp;bet $1 &rarr; Heads&rarr;$2, V($2)=0 &nbsp;&nbsp; Tails&rarr;$0, V($0)=0 &nbsp;&nbsp;&rarr;&nbsp; 0.4&times;0 + 0.6&times;0 = 0.000 &nbsp;&nbsp;(no change)
+                    </div>
+                    <div class="mw-calc mw-calc-updated">
+                        $2: &nbsp;bet $1 &rarr; Heads&rarr;$3, V($3)=1 &nbsp;&nbsp; Tails&rarr;$1, V($1)=0 &nbsp;&nbsp;&rarr;&nbsp; 0.4&times;1 + 0.6&times;0 = <strong>0.400</strong> &nbsp;&nbsp;UPDATED
+                    </div>
+                    <div class="mw-sublabel">After Sweep 1</div>
+                    <div class="mw-grid-4">
+                        <div class="mw-val-box mw-val-fixed-0">$0 = 0</div>
+                        <div class="mw-val-box mw-val-fixed-0">$1 = 0</div>
+                        <div class="mw-val-box mw-val-updated">$2 = 0.400</div>
+                        <div class="mw-val-box mw-val-fixed-win">$3 = 1</div>
+                    </div>
+                    <div class="mw-delta">&Delta; = 0.400 &gt; &theta; &nbsp;&rarr;&nbsp; continue</div>
+
+                    <div class="mw-round-header">
+                        <span class="mw-round-badge">Sweep 2</span>
+                        <span class="mw-round-desc">V($2) updated &mdash; now V($1) can improve using the new V($2)!</span>
+                    </div>
+                    <div class="mw-calc mw-calc-updated">
+                        $1: &nbsp;bet $1 &rarr; Heads&rarr;$2, V($2)=0.400 &nbsp; Tails&rarr;$0, V($0)=0 &nbsp;&nbsp;&rarr;&nbsp; 0.4&times;0.400 + 0.6&times;0 = <strong>0.160</strong> &nbsp;&nbsp;UPDATED
+                    </div>
+                    <div class="mw-calc mw-calc-updated">
+                        $2: &nbsp;bet $1 &rarr; Heads&rarr;$3, V($3)=1 &nbsp;&nbsp; Tails&rarr;$1, V($1)=0.160 &nbsp;&rarr;&nbsp; 0.4&times;1 + 0.6&times;0.160 = <strong>0.496</strong> &nbsp;&nbsp;UPDATED
+                    </div>
+                    <div class="mw-sublabel">After Sweep 2</div>
+                    <div class="mw-grid-4">
+                        <div class="mw-val-box mw-val-fixed-0">$0 = 0</div>
+                        <div class="mw-val-box mw-val-updated">$1 = 0.160</div>
+                        <div class="mw-val-box mw-val-updated">$2 = 0.496</div>
+                        <div class="mw-val-box mw-val-fixed-win">$3 = 1</div>
+                    </div>
+                    <div class="mw-delta">&Delta; = 0.160 &gt; &theta; &nbsp;&rarr;&nbsp; continue</div>
+
+                    <div class="mw-round-header">
+                        <span class="mw-round-badge">Sweep 3</span>
+                        <span class="mw-round-desc">Both states improving each sweep &mdash; values converging&hellip;</span>
+                    </div>
+                    <div class="mw-calc mw-calc-improving">
+                        $1: &nbsp;0.4 &times; V($2) + 0.6 &times; V($0) = 0.4 &times; 0.496 + 0 = 0.198 &nbsp;&nbsp;improving
+                    </div>
+                    <div class="mw-calc mw-calc-improving">
+                        $2: &nbsp;0.4 &times; V($3) + 0.6 &times; V($1) = 0.4 &times; 1 + 0.6 &times; 0.198 = 0.519 &nbsp;&nbsp;improving
+                    </div>
+
+                    <div class="mw-ellipsis">sweeps 4 &ndash; 15 &nbsp;&middot;&nbsp; values keep improving until stable</div>
+
+                    <div class="mw-converged">
+                        Sweep 16 &nbsp;&middot;&nbsp; &Delta; &lt; &theta; &nbsp;&rarr;&nbsp; <strong>CONVERGED</strong> &nbsp;&middot;&nbsp; values are stable
+                    </div>
+                </div>
+
+                <div class="mw-step-arrow">&darr;</div>
+
+                <!-- Step 4 -->
+                <div class="chart-card mw-card">
+                    <div class="mw-step-header">
+                        <div class="mw-step-badge"><span class="mw-step-num">4</span>Final Value Function V*(s)</div>
+                    </div>
+                    <div class="mw-grid-4">
+                        <div class="mw-vf-box mw-vf-zero">
+                            <div class="mw-vf-pct">0% chance</div>
+                            <div class="mw-vf-val">$0 = 0.000</div>
+                        </div>
+                        <div class="mw-vf-box mw-vf-low">
+                            <div class="mw-vf-pct">21% chance</div>
+                            <div class="mw-vf-val">$1 = 0.211</div>
+                        </div>
+                        <div class="mw-vf-box mw-vf-mid">
+                            <div class="mw-vf-pct">53% chance</div>
+                            <div class="mw-vf-val">$2 = 0.527</div>
+                        </div>
+                        <div class="mw-vf-box mw-vf-win">
+                            <div class="mw-vf-pct">WIN!</div>
+                            <div class="mw-vf-val">$3 = 1.000</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mw-step-arrow">&darr;</div>
+
+                <!-- Step 5 -->
+                <div class="chart-card mw-card">
+                    <div class="mw-step-header">
+                        <div class="mw-step-badge"><span class="mw-step-num">5</span>Optimal Policy &pi;*(s)</div>
+                        <span class="mw-step-sub">Bellman one final time &mdash; pick the bet with max value at each state</span>
+                    </div>
+                    <div class="mw-grid-2">
+                        <div class="mw-policy-box mw-pol-blue">
+                            <div class="mw-policy-cap">$1</div>
+                            <div class="mw-policy-opt">(only option)</div>
+                            <div class="mw-policy-bet">&rarr; Bet $1</div>
+                            <div class="mw-policy-val">V($1) = 0.211</div>
+                        </div>
+                        <div class="mw-policy-box mw-pol-green">
+                            <div class="mw-policy-cap">$2</div>
+                            <div class="mw-policy-opt">(only option)</div>
+                            <div class="mw-policy-bet">&rarr; Bet $1</div>
+                            <div class="mw-policy-val">V($2) = 0.527</div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
-            <div id="results-summary" class="chart-card results-summary" style="display:none;">
-                <h2 class="chart-title">Results Summary</h2>
-                <div id="results-content"></div>
+            <!-- ===== Analysis View ===== -->
+            <div id="view-analysis" style="display:none; flex-direction:column; gap:1.25rem; flex:1; min-height:0;">
+
+                <!-- Stats Row -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Sweeps</div>
+                        <div class="stat-value" id="stat-sweeps">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">V* at $50</div>
+                        <div class="stat-value" id="stat-v50">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Opt. Stake $50</div>
+                        <div class="stat-value" id="stat-p50">—</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Opt. Stake $25</div>
+                        <div class="stat-value" id="stat-p25">—</div>
+                    </div>
+                </div>
+
+                <!-- Value Function Chart -->
+                <div class="chart-card">
+                    <h2 class="chart-title">Value Function <em>V(s)</em></h2>
+                    <div id="value-legend" class="chart-legend"></div>
+                    <div class="chart-wrap">
+                        <canvas id="value-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Value Iteration Log -->
+                <div class="chart-card log-card">
+                    <h2 class="chart-title">Value Iteration Log</h2>
+                    <div class="log-table-wrap" id="log-body">
+                        <div class="log-placeholder">Run value iteration to see output&hellip;</div>
+                    </div>
+                </div>
+
             </div>
 
         </main>
