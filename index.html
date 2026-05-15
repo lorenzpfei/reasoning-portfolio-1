@@ -6,15 +6,19 @@
     <title>Task E4.2: Gambler's Problem - Value Iteration</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
 </head>
 <body>
 
     <header>
         <h1>Task E4.2: Gambler's Problem &mdash; Value Iteration</h1>
         <nav class="mode-tabs">
-            <button class="mode-tab active" id="tab-presentation" data-mode="presentation">Guessing</button>
-            <button class="mode-tab" id="tab-micro" data-mode="micro">Micro-World ($3)</button>
-            <button class="mode-tab" id="tab-analysis" data-mode="analysis">Analysis</button>
+            <button class="mode-tab active" id="tab-presentation">Guessing</button>
+            <button class="mode-tab" id="tab-micro">Micro-World ($3)</button>
+            <button class="mode-tab" id="tab-analysis">Analysis</button>
+            <button class="mode-tab" id="tab-labdev">Lab &amp; Dev</button>
         </nav>
         <div class="zoom-controls">
             <button id="zoom-out" class="zoom-btn" title="Zoom out">−</button>
@@ -25,8 +29,8 @@
 
     <div class="layout">
 
-        <!-- ===== Sidebar / Control Panel ===== -->
-        <aside class="sidebar">
+        <!-- ===== Sidebar (micro + analysis only) ===== -->
+        <aside class="sidebar" id="sidebar" style="display:none;">
             <p class="sidebar-title">Parameters</p>
 
             <div class="form-group">
@@ -49,33 +53,19 @@
                 <input type="number" id="step-reward" value="0.0" step="0.1" class="num-full">
             </div>
 
-            <div class="form-group">
-                <label for="start-capital">Starting Capital <em>s</em><sub>0</sub></label>
-                <input type="number" id="start-capital" value="50" min="1" max="99" step="1" class="num-full">
-            </div>
+            <button id="calculate-btn">Run ▶</button>
 
-            <button id="calculate-btn">Reveal Optimal Strategy</button>
+            <button id="save-snapshot-btn" class="btn-snapshot">Save snapshot</button>
 
             <p id="status" class="status"></p>
-
-            <div id="audience-section" class="form-group bets-section">
-                <p class="sidebar-title">Audience Bets</p>
-                <div id="bets-container">
-                    <div class="bet-row">
-                        <input type="text" class="bet-name" placeholder="Name" value="Alice">
-                        <input type="number" class="bet-guess" placeholder="Stake" value="10" min="1" max="99" step="1">
-                    </div>
-                </div>
-                <button id="add-bet-btn" class="add-bet-btn" type="button">+</button>
-            </div>
 
             <div class="info-box">
                 <span class="info-title">Fixed Settings</span>
                 <ul>
-                    <li>Goal: <em>s</em> = 100</li>
-                    <li>States: <em>s</em> = 1 &ndash; 99</li>
-                    <li>Actions: <em>a</em> = 1 &ndash; min(<em>s</em>, 100&minus;<em>s</em>)</li>
-                    <li>&gamma; = 1.0 &nbsp;|&nbsp; &theta; = 1e&minus;9</li>
+                    <li>Goal: \(s = 100\)</li>
+                    <li>States: \(s = 1 \ldots 99\)</li>
+                    <li>\(a \in \{1, \ldots, \min(s,\, 100-s)\}\)</li>
+                    <li>\(\gamma = 1.0\) &nbsp;|&nbsp; \(\theta = 10^{-9}\)</li>
                 </ul>
             </div>
         </aside>
@@ -84,41 +74,37 @@
         <main class="main-content">
 
             <!-- ===== Guessing View ===== -->
-            <div id="view-presentation" style="display:flex; flex-direction:column; gap:1.25rem; flex:1; min-height:0;">
+            <div id="view-presentation" class="view-pane" style="display:flex;">
 
-                <!-- Scenario Card: always visible -->
                 <div class="scenario-card chart-card">
-                    <span class="scenario-eyebrow">The Rigged Casino</span>
-                    <div class="scenario-stats">
-                        <div class="scenario-stat">
-                            <span class="scenario-stat-label">Starting Capital</span>
-                            <span class="scenario-stat-value" id="hero-capital">$50</span>
+                    <p class="scenario-prompt">You have <strong>$50</strong>. The goal is <strong>$100</strong>. The coin lands heads \(p_h = 0.4\) of the time. What is your bet?</p>
+
+                    <div class="guess-inputs-area">
+                        <div id="guess-bets-container">
+                            <div class="bet-row">
+                                <input type="text"   class="bet-name"  placeholder="Name"  value="Alice">
+                                <input type="number" class="bet-guess" placeholder="Stake" value="10" min="1" max="49" step="1">
+                                <button class="remove-bet-btn" type="button" title="Remove">−</button>
+                            </div>
                         </div>
-                        <div class="scenario-divider"></div>
-                        <div class="scenario-stat">
-                            <span class="scenario-stat-label">Goal</span>
-                            <span class="scenario-stat-value">$100</span>
-                        </div>
-                        <div class="scenario-divider"></div>
-                        <div class="scenario-stat">
-                            <span class="scenario-stat-label">Win Chance <em>p</em><sub>h</sub></span>
-                            <span class="scenario-stat-value scenario-ph" id="hero-ph">40%</span>
+                        <div class="guess-actions">
+                            <button id="guess-add-btn" class="add-bet-btn" type="button">+ Add</button>
+                            <button id="reveal-btn"    class="reveal-btn"  type="button">Reveal ▶</button>
                         </div>
                     </div>
-                    <p class="scenario-question">What is the optimal first bet?</p>
                 </div>
 
-                <!-- Results summary: shown after reveal -->
-                <div id="results-summary" class="chart-card results-summary" style="display:none;">
-                    <h2 class="chart-title">Results</h2>
-                    <div id="results-content"></div>
-                </div>
-
-                <!-- Policy chart: shown after reveal -->
-                <div id="policy-card" class="chart-card policy-reveal-card" style="display:none;">
-                    <h2 class="chart-title">Optimal Policy &pi;(<em>s</em>)</h2>
-                    <div class="chart-wrap">
-                        <canvas id="policy-chart"></canvas>
+                <div id="reveal-results" class="chart-card reveal-results-card" style="display:none;">
+                    <div class="reveal-formula-header">
+                        <span class="reveal-formula-label">Bellman optimality</span>
+                        $$V(s) = \max_{a} \left[ p_h \cdot V(s+a) + (1-p_h) \cdot V(s-a) \right]$$
+                    </div>
+                    <div id="reveal-table-wrap"></div>
+                    <div class="reveal-chart-wrap">
+                        <canvas id="reveal-chart"></canvas>
+                    </div>
+                    <div id="reveal-family-callout" class="family-callout" style="display:none;">
+                        But $50 is not the only optimal bet. There is an entire family of optimal policies.
                     </div>
                 </div>
 
@@ -127,7 +113,6 @@
             <!-- ===== Micro-World View ===== -->
             <div id="view-micro" style="display:none; flex-direction:column; gap:0.875rem; flex:1; min-height:0;">
 
-                <!-- Step 1 -->
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">1</span>Setup MDP</div>
@@ -146,7 +131,6 @@
 
                 <div class="mw-step-arrow">&darr;</div>
 
-                <!-- Step 2 -->
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">2</span>Boundary Rule</div>
@@ -160,7 +144,6 @@
 
                 <div class="mw-step-arrow">&darr;</div>
 
-                <!-- Step 3 -->
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">3</span>Value Iteration</div>
@@ -237,7 +220,6 @@
 
                 <div class="mw-step-arrow">&darr;</div>
 
-                <!-- Step 4 -->
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">4</span>Final Value Function V*(s)</div>
@@ -264,7 +246,6 @@
 
                 <div class="mw-step-arrow">&darr;</div>
 
-                <!-- Step 5 -->
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">5</span>Optimal Policy &pi;*(s)</div>
@@ -289,9 +270,8 @@
             </div>
 
             <!-- ===== Analysis View ===== -->
-            <div id="view-analysis" style="display:none; flex-direction:column; gap:1.25rem; flex:1; min-height:0;">
+            <div id="view-analysis" class="view-pane" style="display:none;">
 
-                <!-- Stats Row -->
                 <div class="stats-row">
                     <div class="stat-card">
                         <div class="stat-label">Total Sweeps</div>
@@ -311,21 +291,177 @@
                     </div>
                 </div>
 
-                <!-- Value Function Chart -->
                 <div class="chart-card">
-                    <h2 class="chart-title">Value Function <em>V(s)</em></h2>
+                    <h2 class="chart-title">Value Function \(V(s)\)</h2>
                     <div id="value-legend" class="chart-legend"></div>
                     <div class="chart-wrap">
                         <canvas id="value-chart"></canvas>
                     </div>
                 </div>
 
-                <!-- Value Iteration Log -->
+                <div class="chart-card">
+                    <h2 class="chart-title">Optimal Policy \(\pi(s)\)</h2>
+                    <div class="chart-wrap">
+                        <canvas id="an-policy-chart"></canvas>
+                    </div>
+                </div>
+
                 <div class="chart-card log-card">
                     <h2 class="chart-title">Value Iteration Log</h2>
                     <div class="log-table-wrap" id="log-body">
                         <div class="log-placeholder">Run value iteration to see output&hellip;</div>
                     </div>
+                </div>
+
+            </div>
+
+            <!-- ===== Lab & Dev View ===== -->
+            <div id="view-labdev" class="view-pane" style="display:none;">
+
+                <!-- SECTION A: γ Experiment -->
+                <div class="di-section chart-card">
+                    <h2 class="di-section-title">Experiment: The Cost of Patience</h2>
+
+                    <p class="di-experiment-intro">So far, \(\gamma = 1.0\): a win in 10 flips is worth exactly the same as a win right now. But what if future rewards are worth a little less than immediate ones? This is the discount factor \(\gamma\). Drop it below 1 and the agent starts to care about how long it takes to win &ndash; not just whether it wins.</p>
+
+                    <div class="di-gamma-row">
+                        <label class="di-gamma-label" for="di-gamma-input">Discount factor \(\gamma\)</label>
+                        <input type="number" id="di-gamma-input" value="1.0" min="0.1" max="1.0" step="0.05" class="num-small">
+                        <button id="di-gamma-run-btn" class="btn-demo">Run experiment &#9654;</button>
+                    </div>
+
+                    <div id="di-gamma-results" style="display:none;">
+                        <p class="di-label" style="margin-top:1rem;">Value Function \(V(s)\)</p>
+                        <div class="di-chart-area">
+                            <div class="di-chart-wrap"><canvas id="di-gamma-value-chart"></canvas></div>
+                        </div>
+                        <p class="di-label" style="margin-top:1rem;">Policy \(\pi(s)\)</p>
+                        <div class="di-chart-area">
+                            <div class="di-chart-wrap"><canvas id="di-gamma-policy-chart"></canvas></div>
+                        </div>
+                        <div id="di-gamma-summary" class="di-gamma-summary"></div>
+                        <details class="di-accordion" style="margin-top:1rem;">
+                            <summary>Why this matters</summary>
+                            <div class="di-accordion-body">
+                                <p>In most real RL problems, \(\gamma &lt; 1\) is used for two reasons: it keeps the math well-behaved (prevents infinite sums), and it models the fact that getting something sooner is usually better than getting it later. In the Gambler&rsquo;s Problem the book uses \(\gamma = 1\) because the game always ends &ndash; there is no infinite loop to worry about.</p>
+                            </div>
+                        </details>
+                    </div>
+                </div>
+
+                <!-- ZONE DIVIDER -->
+                <div class="di-zone-separator">
+                    <div class="di-zone-hr-line"></div>
+                    <span class="di-zone-label">Developer Insights</span>
+                    <div class="di-zone-hr-line"></div>
+                </div>
+
+                <!-- SECTION B: Dark zone with dev insights -->
+                <div class="di-dark-zone">
+
+                    <p class="di-zone-intro">The following two issues are not in the book. They come up the first time you implement this yourself.</p>
+
+                    <!-- Issue #1: Float Comparison -->
+                    <div class="di-section chart-card">
+                        <h2 class="di-section-title">Issue #1: Float Comparison</h2>
+
+                        <div class="di-block">
+                            <p class="di-label">Problem</p>
+                            <pre class="code-block"><code>// Naive convergence check
+if (newValue !== oldValue) keepIterating();</code></pre>
+                            <button id="di-broken1-btn" class="btn-demo">Run broken version ▶</button>
+                            <div class="di-chart-area" id="di-broken1-area" style="display:none;">
+                                <p class="di-status" id="di-broken1-status"></p>
+                                <div class="di-chart-wrap">
+                                    <canvas id="di-broken1-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <details class="di-accordion">
+                            <summary>Why does this happen?</summary>
+                            <div class="di-accordion-body">
+                                <p>0.4 &times; 1.0 in IEEE&nbsp;754 = 0.40000000000000002</p>
+                                <p>Strict equality never returns true for most floating point results.</p>
+                                <p>The values computed are correct &ndash; only the termination condition is broken.</p>
+                            </div>
+                        </details>
+
+                        <div class="di-block">
+                            <p class="di-label">Fix &mdash; epsilon tolerance \(\theta = 10^{-9}\)</p>
+                            <pre class="code-block"><code>// With epsilon tolerance
+if (Math.abs(newValue - oldValue) > 1e-9) keepIterating();</code></pre>
+                            <button id="di-fixed1-btn" class="btn-demo">Run fixed version ▶</button>
+                            <div class="di-chart-area" id="di-fixed1-area" style="display:none;">
+                                <p class="di-status" id="di-fixed1-status"></p>
+                                <div class="di-chart-wrap">
+                                    <canvas id="di-fixed1-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="di-divider"></div>
+
+                    <!-- Issue #2: Tie-Breaker -->
+                    <div class="di-section chart-card">
+                        <h2 class="di-section-title">Issue #2: Tie-Breaker</h2>
+
+                        <div class="di-block">
+                            <p class="di-label">Problem</p>
+                            <pre class="code-block"><code>// Naive argmax – takes last maximum found (= largest bet)
+let bestAction = 1, bestValue = -Infinity;
+for (const a of actions) {
+  if (bellman(s, a) >= bestValue) {
+    bestAction = a;
+    bestValue = bellman(s, a);
+  }
+}</code></pre>
+                            <button id="di-broken2-btn" class="btn-demo">Show policy without tie-breaker ▶</button>
+                            <div class="di-chart-area" id="di-broken2-area" style="display:none;">
+                                <p class="di-status" id="di-broken2-status"></p>
+                                <div class="di-chart-wrap">
+                                    <canvas id="di-broken2-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <details class="di-accordion">
+                            <summary>Why does this happen?</summary>
+                            <div class="di-accordion-body">
+                                <p>At many states, multiple bet sizes produce exactly the same \(V(s)\).</p>
+                                <p>For example at s=50: bets of $50, $25, $12&hellip; can all be equally optimal.</p>
+                                <p>argmax with no tie-breaking depends on iteration order, not mathematics.</p>
+                                <p>Sutton &amp; Barto call this &ldquo;a whole family of optimal policies&rdquo; &ndash; your code just happens to pick one member arbitrarily.</p>
+                            </div>
+                        </details>
+
+                        <div class="di-block">
+                            <p class="di-label">Fix</p>
+                            <pre class="code-block"><code>// On tie: prefer smallest bet
+if (qValue > bestValue ||
+   (qValue === bestValue && a < bestAction)) {
+  bestAction = a;
+  bestValue = qValue;
+}</code></pre>
+                            <button id="di-fixed2-btn" class="btn-demo">Show policy with tie-breaker ▶</button>
+                            <div class="di-chart-area" id="di-fixed2-area" style="display:none;">
+                                <p class="di-status" id="di-fixed2-status"></p>
+                                <div class="di-chart-wrap">
+                                    <canvas id="di-fixed2-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Over to you callout -->
+                    <div class="di-over-to-you">
+                        <h3 class="di-oty-header">Over to you</h3>
+                        <p>The tie-breaker rule picks the most conservative member of the optimal policy family &ndash; smallest bet when there is a tie.</p>
+                        <p>What would the most aggressive member look like? Is it still mathematically optimal?</p>
+                        <p>And if you reimplemented this for a goal of $200 instead of $100 &ndash; what in the code would actually need to change?</p>
+                    </div>
+
                 </div>
 
             </div>
