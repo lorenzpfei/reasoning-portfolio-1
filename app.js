@@ -411,8 +411,13 @@ function initAnalysisGhost() {
 // ===========================
 // ===== GUESSING TAB ========
 // ===========================
-const PH_GUESS = 0.4;
-let revealChart = null;
+let revealChart  = null;
+let revealShown  = false;
+
+function getGuessPh() {
+    const raw = parseFloat(document.getElementById('guess-ph-input').value);
+    return (isNaN(raw) || raw < 0.01 || raw > 0.99) ? 0.4 : raw;
+}
 
 function addGuessRow() {
     const container = document.getElementById('guess-bets-container');
@@ -448,41 +453,16 @@ function addGuessRow() {
     guessInput.focus();
 }
 
-// Build a <details> element for one bet entry in the reveal right column
-function buildProbEntry(name, betSize, prob, isOptimal) {
-    const formula = makeBellmanHtml(betSize, 50, 100, PH_GUESS);
-
-    const details = document.createElement('details');
-    details.className = 'reveal-prob-entry' + (isOptimal ? ' reveal-prob-entry-optimal' : '');
-
-    const summary = document.createElement('summary');
-    summary.className = 'reveal-prob-row' + (isOptimal ? ' reveal-prob-optimal' : '');
-
-    const nameEl = document.createElement('span');
-    nameEl.className   = 'reveal-prob-name';
-    nameEl.textContent = name;
-
-    const valEl = document.createElement('span');
-    valEl.className = 'reveal-prob-value';
-    valEl.textContent = formatProbPct(prob);
-
-    summary.appendChild(nameEl);
-    summary.appendChild(valEl);
-    details.appendChild(summary);
-
-    const body = document.createElement('div');
-    body.className   = 'reveal-formula-body';
-    body.innerHTML   = `<div class="formula-abstract">${formula.abstract}</div>
-                        <div class="formula-filled">${formula.filled}</div>`;
-    details.appendChild(body);
-
-    return details;
-}
-
 function revealGuessing() {
+    const ph          = getGuessPh();
     const nameInputs  = document.querySelectorAll('#guess-bets-container .bet-name');
     const guessInputs = document.querySelectorAll('#guess-bets-container .bet-guess');
-    const optimalBet  = 50;
+
+    // Compute optimal via value iteration
+    const { V }      = runValueIteration(ph, 1.0, 0.0);
+    const policy     = extractPolicy(V, ph, 1.0, 0.0, 'epsilon-smallest');
+    const optimalBet = policy[50];
+    const optProb    = V[50];
 
     const bets = [];
     for (let i = 0; i < guessInputs.length; i++) {
@@ -493,18 +473,16 @@ function revealGuessing() {
         }
     }
 
-    const entries = bets.map(b => ({ ...b, prob: flatBetWinProb(b.bet, 50, 100, PH_GUESS) }));
-    const optProb  = flatBetWinProb(optimalBet, 50, 100, PH_GUESS);
+    const entries = bets.map(b => ({ ...b, prob: flatBetWinProb(b.bet, 50, 100, ph) }));
 
-    // Build probability table
+    // Build probability table — column header shows current p_h
     const tableWrap = document.getElementById('reveal-table-wrap');
     let html = `<table class="reveal-table"><thead><tr>
-        <th>Name</th><th>Bet</th><th>Win probability</th>
+        <th>Name</th><th>Bet</th><th>Win probability \\(p_h = ${ph.toFixed(2)}\\)</th>
     </tr></thead><tbody>`;
 
     for (const e of entries) {
-        const note = (50 + e.bet === 100 && 50 - e.bet === 0)
-            ? 'one flip, direct' : 'flat-bet strategy';
+        const note   = (e.bet === 50) ? 'one flip, direct' : 'flat-bet strategy';
         const rowCls = e.bet === optimalBet ? 'reveal-row reveal-row-optimal' : 'reveal-row';
         html += `<tr class="${rowCls}">
             <td>${e.name}</td>
@@ -516,12 +494,13 @@ function revealGuessing() {
         </tr>`;
     }
 
+    const optNote = (optimalBet === 50) ? 'one flip, direct' : 'value iteration';
     html += `<tr class="reveal-row reveal-row-optimal">
         <td>Optimal <span class="reveal-check">&#10003;</span></td>
         <td class="reveal-bet-cell">$${optimalBet}</td>
         <td class="reveal-prob-cell">
             <span class="reveal-pct">${formatProbPct(optProb)}</span>
-            <span class="reveal-note">one flip, direct</span>
+            <span class="reveal-note">${optNote}</span>
         </td>
     </tr>`;
 
@@ -529,10 +508,14 @@ function revealGuessing() {
     tableWrap.innerHTML = html;
 
     // Horizontal log-scale bar chart
-    const allEntries  = [...entries, { name: 'Optimal', bet: optimalBet, prob: optProb, isOptimal: true }];
+    const allEntries  = [
+        ...entries.map(e => ({ ...e, isOptimalBet: e.bet === optimalBet })),
+        { name: 'Optimal', bet: optimalBet, prob: optProb, isOptimal: true, isOptimalBet: true },
+    ];
     const chartLabels = allEntries.map(e => e.isOptimal ? 'Optimal ★' : `${e.name} ($${e.bet})`);
     const chartData   = allEntries.map(e => Math.max(e.prob, 1e-100));
-    const chartBg     = allEntries.map(e => e.isOptimal ? 'rgba(16, 185, 129, 0.75)' : 'rgba(59, 130, 246, 0.65)');
+    const chartBg     = allEntries.map(e =>
+        (e.isOptimal || e.isOptimalBet) ? 'rgba(16, 185, 129, 0.75)' : 'rgba(59, 130, 246, 0.65)');
 
     if (revealChart) { revealChart.destroy(); revealChart = null; }
     const ctx = document.getElementById('reveal-chart').getContext('2d');
@@ -577,6 +560,7 @@ function revealGuessing() {
         }
     });
 
+    revealShown = true;
     document.getElementById('reveal-results').style.display = '';
     document.getElementById('reveal-family-callout').style.display = '';
     renderKaTeX(document.getElementById('reveal-results'));
@@ -788,6 +772,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Guessing tab
     document.getElementById('guess-add-btn').addEventListener('click', addGuessRow);
     document.getElementById('reveal-btn').addEventListener('click',    revealGuessing);
+    document.getElementById('guess-ph-input').addEventListener('input', () => {
+        if (revealShown) revealGuessing();
+    });
     const firstRemove = document.querySelector('#guess-bets-container .remove-bet-btn');
     if (firstRemove) {
         firstRemove.addEventListener('click', () => {

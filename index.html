@@ -35,7 +35,7 @@
 
             <div class="form-group">
                 <label for="ph-slider">
-                    Probability of Heads &nbsp;<span class="math">p<sub>h</sub></span>
+                    Probability of Heads &nbsp;\(p_h\)
                 </label>
                 <div class="range-row">
                     <input type="range" id="ph-slider" min="0" max="1" step="0.01" value="0.4">
@@ -77,7 +77,12 @@
             <div id="view-presentation" class="view-pane" style="display:flex;">
 
                 <div class="scenario-card chart-card">
-                    <p class="scenario-prompt">You have <strong>$50</strong>. The goal is <strong>$100</strong>. The coin lands heads \(p_h = 0.4\) of the time. What is your bet?</p>
+                    <p class="scenario-prompt">You have <strong>$50</strong>. The goal is <strong>$100</strong>. The coin lands heads \(p_h\) of the time. What is your bet?</p>
+
+                    <div class="guess-ph-row">
+                        <span class="guess-ph-label">Coin heads probability &nbsp;\(p_h\)</span>
+                        <input type="number" id="guess-ph-input" value="0.40" min="0.01" max="0.99" step="0.01" class="num-small">
+                    </div>
 
                     <div class="guess-inputs-area">
                         <div id="guess-bets-container">
@@ -95,16 +100,12 @@
                 </div>
 
                 <div id="reveal-results" class="chart-card reveal-results-card" style="display:none;">
-                    <div class="reveal-formula-header">
-                        <span class="reveal-formula-label">Bellman optimality</span>
-                        $$V(s) = \max_{a} \left[ p_h \cdot V(s+a) + (1-p_h) \cdot V(s-a) \right]$$
-                    </div>
                     <div id="reveal-table-wrap"></div>
                     <div class="reveal-chart-wrap">
                         <canvas id="reveal-chart"></canvas>
                     </div>
                     <div id="reveal-family-callout" class="family-callout" style="display:none;">
-                        But $50 is not the only optimal bet. There is an entire family of optimal policies.
+                        There is an entire family of optimal policies &mdash; the smallest-bet tie-breaker selects one member of this family.
                     </div>
                 </div>
 
@@ -116,7 +117,7 @@
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">1</span>Setup MDP</div>
-                        <span class="mw-step-sub">Goal = $3 &nbsp;&middot;&nbsp; p<sub>h</sub> = 0.4 &nbsp;&middot;&nbsp; &gamma; = 1.0</span>
+                        <span class="mw-step-sub">Goal = $3 &nbsp;&middot;&nbsp; \(p_h = 0.4\) &nbsp;&middot;&nbsp; \(\gamma = 1.0\)</span>
                     </div>
                     <div class="mw-grid-4">
                         <div class="mw-state mw-lose"><div class="mw-state-val">$0</div><div class="mw-state-lbl">Lose (fixed)</div></div>
@@ -134,11 +135,11 @@
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
                         <div class="mw-step-badge"><span class="mw-step-num">2</span>Boundary Rule</div>
-                        <span class="mw-step-sub">Max allowed bet at each state = min(s, 3 &minus; s)</span>
+                        <span class="mw-step-sub">Max allowed bet at each state \(= \min(s,\, 3-s)\)</span>
                     </div>
                     <div class="mw-grid-2">
-                        <div class="mw-banner mw-banner-blue">$1 &nbsp;: &nbsp;min(1, 2) = 1 &nbsp;&rarr;&nbsp; bet $1 only</div>
-                        <div class="mw-banner mw-banner-blue">$2 &nbsp;: &nbsp;min(2, 1) = 1 &nbsp;&rarr;&nbsp; bet $1 only</div>
+                        <div class="mw-banner mw-banner-blue">$1 &nbsp;: &nbsp;\(\min(1,\, 2) = 1\) &nbsp;&rarr;&nbsp; bet $1 only</div>
+                        <div class="mw-banner mw-banner-blue">$2 &nbsp;: &nbsp;\(\min(2,\, 1) = 1\) &nbsp;&rarr;&nbsp; bet $1 only</div>
                     </div>
                 </div>
 
@@ -151,7 +152,7 @@
                     </div>
 
                     <div class="mw-banner mw-banner-amber">
-                        V(s) = max<sub>bet</sub> [ p<sub>h</sub> &times; V(s + bet) + (1 &minus; p<sub>h</sub>) &times; V(s &minus; bet) ] &nbsp;=&nbsp; 0.4 &times; V(heads) + 0.6 &times; V(tails)
+                        \(V(s) = \max_{a} \bigl[ p_h \cdot V(s+a) + (1-p_h) \cdot V(s-a) \bigr]\) &nbsp;=&nbsp; 0.4 &times; V(heads) + 0.6 &times; V(tails)
                     </div>
 
                     <div class="mw-sublabel">Initialize &mdash; all guesses = 0 &nbsp;(only $3 = 1 is fixed)</div>
@@ -179,7 +180,7 @@
                         <div class="mw-val-box mw-val-updated">$2 = 0.400</div>
                         <div class="mw-val-box mw-val-fixed-win">$3 = 1</div>
                     </div>
-                    <div class="mw-delta">&Delta; = 0.400 &gt; &theta; &nbsp;&rarr;&nbsp; continue</div>
+                    <div class="mw-delta">\(\Delta = 0.400 > \theta\) &nbsp;&rarr;&nbsp; continue</div>
 
                     <div class="mw-round-header">
                         <span class="mw-round-badge">Sweep 2</span>
@@ -198,7 +199,7 @@
                         <div class="mw-val-box mw-val-updated">$2 = 0.496</div>
                         <div class="mw-val-box mw-val-fixed-win">$3 = 1</div>
                     </div>
-                    <div class="mw-delta">&Delta; = 0.160 &gt; &theta; &nbsp;&rarr;&nbsp; continue</div>
+                    <div class="mw-delta">\(\Delta = 0.160 > \theta\) &nbsp;&rarr;&nbsp; continue</div>
 
                     <div class="mw-round-header">
                         <span class="mw-round-badge">Sweep 3</span>
@@ -214,7 +215,7 @@
                     <div class="mw-ellipsis">sweeps 4 &ndash; 15 &nbsp;&middot;&nbsp; values keep improving until stable</div>
 
                     <div class="mw-converged">
-                        Sweep 16 &nbsp;&middot;&nbsp; &Delta; &lt; &theta; &nbsp;&rarr;&nbsp; <strong>CONVERGED</strong> &nbsp;&middot;&nbsp; values are stable
+                        Sweep 16 &nbsp;&middot;&nbsp; \(\Delta < \theta\) &nbsp;&rarr;&nbsp; <strong>CONVERGED</strong> &nbsp;&middot;&nbsp; values are stable
                     </div>
                 </div>
 
@@ -222,7 +223,7 @@
 
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
-                        <div class="mw-step-badge"><span class="mw-step-num">4</span>Final Value Function V*(s)</div>
+                        <div class="mw-step-badge"><span class="mw-step-num">4</span>Final Value Function \(V^*(s)\)</div>
                     </div>
                     <div class="mw-grid-4">
                         <div class="mw-vf-box mw-vf-zero">
@@ -248,7 +249,7 @@
 
                 <div class="chart-card mw-card">
                     <div class="mw-step-header">
-                        <div class="mw-step-badge"><span class="mw-step-num">5</span>Optimal Policy &pi;*(s)</div>
+                        <div class="mw-step-badge"><span class="mw-step-num">5</span>Optimal Policy \(\pi^*(s)\)</div>
                         <span class="mw-step-sub">Bellman one final time &mdash; pick the bet with max value at each state</span>
                     </div>
                     <div class="mw-grid-2">
